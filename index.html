@@ -22,7 +22,7 @@
         .story-avatar { width: 62px; height: 62px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .story-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #000; object-fit: cover; }
         
-        /* Feed */
+        /* Feed & Chat Container */
         .feed { max-width: 480px; margin: 0 auto; min-height: 200px; }
         .post { margin-bottom: 20px; border-bottom: 1px solid #121212; }
         .post-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; }
@@ -33,6 +33,13 @@
         .action-btns { display: flex; gap: 16px; }
         .post-info { padding: 0 12px 12px 12px; font-size: 14px; line-height: 1.4; }
         .likes-count { font-weight: 600; margin-bottom: 4px; }
+
+        /* Messenger / Chat Box Section */
+        .chat-section { max-width: 480px; margin: 20px auto; background: #1c1c1e; padding: 15px; border-radius: 12px; border: 1px solid #2c2c2e; }
+        .chat-box-title { font-size: 16px; font-weight: 600; margin-bottom: 10px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        #chatMessages { height: 180px; overflow-y: auto; background: #111; padding: 10px; border-radius: 8px; margin-bottom: 10px; text-align: left; font-size: 13px; display: flex; flexDirection: column; gap: 8px; }
+        .chat-msg { background: #2c2c2e; padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; word-break: break-word; }
+        .chat-msg img, .chat-msg video { max-width: 100%; border-radius: 6px; margin-top: 5px; display: block; }
 
         /* Navigation */
         .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid #1c1c1e; display: flex; justify-content: space-around; padding: 12px 0; max-width: 480px; margin: 0 auto; z-index: 10; }
@@ -53,13 +60,11 @@
         
         .shutter-btn { width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff; background: transparent; cursor: pointer; display: flex; justify-content: center; align-items: center; }
         .shutter-inner { width: 60px; height: 60px; border-radius: 50%; background: #fff; transition: 0.2s; }
-        .shutter-btn.recording .shutter-inner { background: #ff3b30; border-radius: 8px; width: 35px; height: 35px; }
 
         .gallery-picker-btn { background: rgba(255,255,255,0.2); border: none; color: #fff; padding: 10px 15px; border-radius: 20px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
         
         input[type="text"] { width: 100%; padding: 12px; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; color: white; font-size: 14px; }
         .btn-post { background: #0095f6; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 16px; }
-        
         .btn-live { background: #e50914; color: white; border: none; padding: 5px 12px; border-radius: 18px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; }
     </style>
 </head>
@@ -89,15 +94,28 @@
             <div class="story-avatar"><img src="https://picsum.photos/100/100?random=3" alt="User"></div>
             <span>riya_vlog</span>
         </div>
-        <div class="story">
-            <div class="story-avatar"><img src="https://picsum.photos/100/100?random=4" alt="User"></div>
-            <span>fun_memes</span>
-        </div>
     </div>
 
     <!-- Feed Container -->
     <div class="feed" id="feed">
-        <p style="text-align:center; color:#888; margin-top: 40px;">लोड हो रहा है...</p>
+        <p style="text-align:center; color:#888; margin-top: 20px;">लोड हो रहा है...</p>
+    </div>
+
+    <!-- Messenger / Chat Section -->
+    <div class="chat-section">
+        <div class="chat-box-title">
+            <span>💬 मैसेंजर चैट</span>
+            <label style="background:rgba(255,255,255,0.1); padding:4px 10px; border-radius:15px; font-size:12px; cursor:pointer;">
+                📷 फोटो/वीडियो भेजें <input type="file" id="chatMediaInput" accept="image/*,video/*" style="display:none" onchange="sendChatMedia(event)">
+            </label>
+        </div>
+        <div id="chatMessages">
+            <p style="color:#888; text-align:center;">चैट लोड हो रही है...</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="chatInput" placeholder="मैसेज लिखें...">
+            <button class="btn-post" onclick="sendTextMessage()" style="width: 100px; padding: 10px;">भेजें</button>
+        </div>
     </div>
 
     <!-- Bottom Nav -->
@@ -162,7 +180,9 @@
         let mediaStream = null;
         let recordedFile = null;
         let useFrontCamera = false;
+        const currentUsername = "user_" + Math.floor(Math.random() * 900 + 100);
 
+        // --- कैमरा और पोस्ट अपलोड फ़ंक्शन ---
         async function openCameraModal() {
             document.getElementById('cameraModal').style.display = 'flex';
             document.getElementById('previewContainer').style.display = 'none';
@@ -184,16 +204,12 @@
 
         function closeCameraModal() {
             document.getElementById('cameraModal').style.display = 'none';
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-            }
+            if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); }
         }
 
         async function switchCamera() {
             useFrontCamera = !useFrontCamera;
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-            }
+            if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); }
             try {
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: useFrontCamera ? 'user' : 'environment' },
@@ -205,7 +221,6 @@
             }
         }
 
-        // फोटो खींचने का फंक्शन (शटर बटन)
         function takeSnapshotOrRecord() {
             const videoElement = document.getElementById('cameraPreview');
             const canvas = document.createElement('canvas');
@@ -220,7 +235,6 @@
             }, 'image/jpeg', 0.9);
         }
 
-        // गैलरी से चुनने पर
         function handleGallerySelect(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -230,9 +244,7 @@
         }
 
         function showPreview(url, type) {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(track => track.stop());
-            }
+            if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); }
             const previewContainer = document.getElementById('previewContainer');
             previewContainer.innerHTML = type === 'video' 
                 ? `<video src="${url}" controls autoplay loop style="width:100%;height:100%;object-fit:cover;"></video>`
@@ -244,7 +256,6 @@
             document.getElementById('captionBox').style.display = 'flex';
         }
 
-        // Supabase पर अपलोड करने का मुख्य फंक्शन
         async function uploadCapturedMedia() {
             if (!recordedFile) return alert("कृपया पहले फोटो लें या चुनें!");
             const caption = document.getElementById('caption').value;
@@ -257,47 +268,32 @@
                 const fileExt = recordedFile.name.split('.').pop().toLowerCase();
                 const cleanFileName = `${Date.now()}_${Math.floor(Math.random()*1000)}.${fileExt}`;
 
-                const { error } = await dbClient.storage.from('media').upload(cleanFileName, recordedFile, {
-                    cacheControl: '3600',
-                    upsert: true
-                });
-
-                if (error) {
-                    alert("स्टोरेज अपलोड एरर: " + error.message);
-                    uploadBtn.innerText = "शेयर करें";
-                    uploadBtn.disabled = false;
-                    return;
-                }
+                const { error } = await dbClient.storage.from('media').upload(cleanFileName, recordedFile, { upsert: true });
+                if (error) { alert("स्टोरेज एरर: " + error.message); uploadBtn.innerText = "शेयर करें"; uploadBtn.disabled = false; return; }
 
                 const { data: publicUrlData } = dbClient.storage.from('media').getPublicUrl(cleanFileName);
-                const mediaUrl = publicUrlData.publicUrl;
-
-                const { error: dbError } = await dbClient.from('posts').insert([
-                    { image_url: mediaUrl, caption: caption, username: "user_" + Math.floor(Math.random() * 900 + 100) }
+                
+                await dbClient.from('posts').insert([
+                    { image_url: publicUrlData.publicUrl, caption: caption, username: currentUsername }
                 ]);
 
-                if (dbError) {
-                    alert("डेटाबेस सेव एरर: " + dbError.message);
-                } else {
-                    alert("पोस्ट सफलतापूर्वक शेयर हो गई! 🎉");
-                    closeCameraModal();
-                    loadPosts();
-                }
+                alert("पोस्ट शेयर हो गई! 🎉");
+                closeCameraModal();
+                loadPosts();
             } catch (err) {
-                alert("अपलोड में समस्या आई: " + err.message);
+                alert("समस्या आई: " + err.message);
             }
-
             uploadBtn.innerText = "शेयर करें";
             uploadBtn.disabled = false;
         }
 
-        // फीड लोड करने का फंक्शन
+        // --- फीड लोड करने का फ़ंक्शन ---
         async function loadPosts() {
             const feed = document.getElementById('feed');
             try {
                 const { data, error } = await dbClient.from('posts').select('*').order('created_at', { ascending: false });
                 if (error || !data || data.length === 0) {
-                    feed.innerHTML = '<p style="text-align:center; color:#888; margin-top:40px;">अभी कोई पोस्ट नहीं है। ➕ दबाकर पहली फोटो या रील बनाएँ!</p>';
+                    feed.innerHTML = '<p style="text-align:center; color:#888; margin-top:20px;">कोई पोस्ट नहीं है। ➕ दबाकर पहली पोस्ट डालें!</p>';
                     return;
                 }
 
@@ -333,14 +329,81 @@
                     `;
                 });
             } catch (err) {
-                feed.innerHTML = '<p style="text-align:center; color:#ff4d4d; margin-top:30px;">नेटवर्क कनेक्शन एरर!</p>';
+                feed.innerHTML = '<p style="text-align:center; color:#ff4d4d; margin-top:20px;">फीड लोड करने में एरर!</p>';
             }
+        }
+
+        // --- चैट और मैसेंजर फ़ंक्शन ---
+        async function sendTextMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            const { error } = await dbClient.from('messages').insert([
+                { sender_id: currentUsername, receiver_id: 'All', message: msg }
+            ]);
+
+            if (!error) {
+                input.value = '';
+                loadChatMessages();
+            } else {
+                alert("मैसेज नहीं गया: " + error.message);
+            }
+        }
+
+        async function sendChatMedia(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const fileName = `chat_${Date.now()}_${Math.floor(Math.random()*1000)}.${fileExt}`;
+
+            const { error } = await dbClient.storage.from('media').upload(fileName, file, { upsert: true });
+            if (error) { alert("मीडिया अपलोड एरर: " + error.message); return; }
+
+            const { data: publicUrlData } = dbClient.storage.from('media').getPublicUrl(fileName);
+            const mediaUrl = publicUrlData.publicUrl;
+
+            const isVideo = file.type.includes('video');
+            const mediaTag = isVideo ? `<video src="${mediaUrl}" controls style="max-width:100%; border-radius:6px;"></video>` : `<img src="${mediaUrl}" style="max-width:100%; border-radius:6px;">`;
+
+            await dbClient.from('messages').insert([
+                { sender_id: currentUsername, receiver_id: 'All', message: mediaTag }
+            ]);
+
+            loadChatMessages();
+        }
+
+        async function loadChatMessages() {
+            const chatBox = document.getElementById('chatMessages');
+            if (!chatBox) return;
+
+            const { data, error } = await dbClient.from('messages').select('*').order('created_at', { ascending: true });
+            if (error || !data) {
+                chatBox.innerHTML = '<p style="color:#888; text-align:center;">चैट लोड नहीं हो सकी</p>';
+                return;
+            }
+
+            chatBox.innerHTML = '';
+            data.forEach(m => {
+                chatBox.innerHTML += `
+                    <div class="chat-msg">
+                        <div style="font-size:10px; color:#aaa; margin-bottom:2px;">${m.sender_id || 'User'}</div>
+                        <div>${m.message || ''}</div>
+                    </div>
+                `;
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
         }
 
         function openLiveModal() { document.getElementById('liveModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        // ऐप लोड होने पर डेटा फेच करें
         loadPosts();
+        loadChatMessages();
+        // ऑटो रिफ्रेश चैट हर 5 सेकंड में
+        setInterval(loadChatMessages, 5000);
     </script>
 </body>
 </html>
