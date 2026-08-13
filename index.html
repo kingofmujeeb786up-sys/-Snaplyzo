@@ -3,147 +3,259 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snaplyzo Messenger</title>
+    <title>VibeGram - Social & Connect</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: #0f141c; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #000; color: #fff; padding-bottom: 60px; overflow-x: hidden; }
 
-        /* Top Header */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161f30; border-bottom: 1px solid #222d42; }
-        .logo { font-size: 18px; font-weight: bold; color: #38bdf8; }
+        /* Views management */
+        .app-view { display: none; }
+        .app-view.active { display: block; }
 
-        /* Main Content Screens */
-        .screen { flex: 1; display: none; flex-direction: column; overflow-y: auto; padding: 10px; }
-        .screen.active { display: flex; }
+        /* Header */
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid #222; position: sticky; top: 0; background: #000; z-index: 10; }
+        .app-brand { font-size: 22px; font-weight: bold; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-icons { display: flex; gap: 20px; font-size: 20px; cursor: pointer; }
 
-        /* Chat Item Style */
-        .chat-card { display: flex; align-items: center; justify-content: space-between; background: #161f30; padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid #222d42; }
-        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #38bdf8; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+        /* Stories Bar */
+        .stories-row { display: flex; gap: 12px; padding: 10px 12px; overflow-x: auto; border-bottom: 0.5px solid #222; scrollbar-width: none; }
+        .stories-row::-webkit-scrollbar { display: none; }
+        .story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; flex-shrink: 0; }
+        .story-ring { width: 62px; height: 62px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #00f2fe, #4facfe); position: relative; }
+        .story-ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #000; object-fit: cover; }
 
-        /* Chat Room Screen */
-        #chatRoom { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f141c; z-index: 100; display: none; flex-direction: column; }
-        .chat-room-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #161f30; border-bottom: 1px solid #222d42; }
-        .messages-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 14px; word-break: break-word; }
-        .msg.incoming { background: #222d42; align-self: flex-start; }
-        .msg.outgoing { background: #0284c7; color: #fff; align-self: flex-end; }
-        .chat-footer { display: flex; padding: 10px; background: #161f30; border-top: 1px solid #222d42; gap: 10px; }
-        .chat-footer input { flex: 1; padding: 10px; background: #0f141c; border: 1px solid #222d42; border-radius: 8px; color: white; outline: none; }
-        .chat-footer button { background: #0284c7; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        /* Feed Posts */
+        .feed-box { max-width: 470px; margin: 0 auto; }
+        .post-box { margin-bottom: 15px; border-bottom: 0.5px solid #222; }
+        .post-top { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
+        .post-user { display: flex; align-items: center; gap: 10px; }
+        .avatar-circle { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; }
+        .post-img { width: 100%; max-height: 500px; object-fit: cover; display: block; background: #111; }
+        .post-actions { padding: 10px 12px; display: flex; justify-content: space-between; font-size: 22px; }
+        .action-group { display: flex; gap: 16px; }
+        .post-desc { padding: 0 12px 12px 12px; font-size: 13px; line-height: 1.4; }
 
-        /* Call Screen Overlay */
-        #callScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070a0f; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .call-avatar-big { width: 90px; height: 90px; border-radius: 50%; background: #0284c7; font-size: 32px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 2px solid #38bdf8; }
-        .call-buttons { display: flex; gap: 40px; margin-top: 40px; }
-        .c-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
+        /* Chats / Messages View */
+        .chat-list-page { padding: 0; }
+        .msg-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; }
+        .msg-row:hover { background: #111; }
+        .msg-user-box { display: flex; align-items: center; gap: 12px; }
+        .msg-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
 
-        /* Bottom Nav */
-        .nav-bar { height: 55px; background: #161f30; border-top: 1px solid #222d42; display: flex; justify-content: space-around; align-items: center; }
-        .nav-tab { background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; }
-        .nav-tab.active { color: #38bdf8; }
+        /* Chat Room UI */
+        #chatRoomBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; }
+        .chatroom-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid #222; background: #000; }
+        .chatroom-msgs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14px; word-break: break-word; background: #222; }
+        .bubble.sent { background: #0084ff; align-self: flex-end; }
+        .chatroom-footer { display: flex; align-items: center; padding: 10px; border-top: 0.5px solid #222; background: #000; gap: 10px; }
+        .chatroom-footer input { flex: 1; background: #111; border: 0.5px solid #333; padding: 12px; border-radius: 24px; color: #fff; outline: none; font-size: 14px; }
+
+        /* Calling Screen Overlay */
+        #callOverlayBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 500; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .call-user-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 2px solid #0084ff; }
+        .call-btn-group { display: flex; gap: 50px; margin-top: 50px; }
+        .call-action-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; }
+
+        /* Bottom Nav Bar */
+        .bottom-navigation { position: fixed; bottom: 0; left: 0; right: 0; height: 52px; background: #000; border-top: 0.5px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 50; }
+        .nav-icon-btn { font-size: 22px; cursor: pointer; color: #fff; background: none; border: none; }
     </style>
 </head>
 <body>
 
-    <!-- Top Header -->
-    <div class="header">
-        <div class="logo">⚡ Snaplyzo</div>
-        <div style="font-size: 18px; cursor: pointer;" onclick="alert('नोटिफिकेशन')">🔔</div>
-    </div>
+    <!-- 1. HOME FEED VIEW -->
+    <div id="feedView" class="app-view active">
+        <div class="top-header">
+            <div class="app-brand">VibeGram</div>
+            <div class="header-icons">
+                <span>♡</span>
+                <span onclick="switchView('chatsView')">✈︎</span>
+            </div>
+        </div>
 
-    <!-- Screen 1: Chats List -->
-    <div id="chatsScreen" class="screen active">
-        <div style="padding: 10px 0; font-size: 15px; font-weight: bold; color: #94a3b8;">कंवर्सेशन (Conversations)</div>
-        <div class="chat-card" onclick="openChat('Sanskari Balak')">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div class="avatar">SB</div>
-                <div>
-                    <b>Sanskari Balak</b>
-                    <div style="font-size: 12px; color: #94a3b8; margin-top: 3px;">नमस्ते! कैसे हो?</div>
+        <!-- Stories Section -->
+        <div class="stories-row">
+            <div class="story-item" onclick="alert('स्टोरी जोड़ें')">
+                <div class="story-ring">
+                    <img src="https://picsum.photos/100/100?random=1" alt="You">
+                </div>
+                <span>Your story</span>
+            </div>
+            <div class="story-item" onclick="openChatRoom('Sanskari Balak')">
+                <div class="story-ring">
+                    <img src="https://picsum.photos/100/100?random=2" alt="User">
+                </div>
+                <span>Sanskari</span>
+            </div>
+            <div class="story-item" onclick="openChatRoom('Shubham Gupta')">
+                <div class="story-ring">
+                    <img src="https://picsum.photos/100/100?random=3" alt="User">
+                </div>
+                <span>Shubham</span>
+            </div>
+        </div>
+
+        <!-- Feed Posts List -->
+        <div class="feed-box">
+            <div class="post-box">
+                <div class="post-top">
+                    <div class="post-user">
+                        <img src="https://picsum.photos/100/100?random=2" class="avatar-circle">
+                        <span>Sanskari Balak</span>
+                    </div>
+                    <span>•••</span>
+                </div>
+                <img src="https://picsum.photos/600/600?random=10" class="post-img">
+                <div class="post-actions">
+                    <div class="action-group">
+                        <span>♡</span>
+                        <span>💬</span>
+                        <span>✈︎</span>
+                    </div>
+                    <span>🔖</span>
+                </div>
+                <div class="post-desc">
+                    <b>1,245 likes</b><br>
+                    <b>Sanskari Balak</b> बेहतरीन और शानदार शाम! 🔥
                 </div>
             </div>
-            <span style="font-size: 12px; color: #38bdf8;">ऑनलाइन</span>
         </div>
     </div>
 
-    <!-- Screen 2: Profile -->
-    <div id="profileScreen" class="screen" style="align-items: center; justify-content: center; text-align: center;">
-        <div class="avatar" style="width: 80px; height: 80px; font-size: 30px; margin: 0 auto 15px auto;">M</div>
-        <h2>Mujeeb Mujeeb</h2>
-        <p style="color: #94a3b8; font-size: 13px; margin-top: 5px;">डेवलपर और क्रिएटर</p>
+    <!-- 2. CHAT LIST VIEW -->
+    <div id="chatsView" class="app-view">
+        <div class="top-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px; cursor: pointer;" onclick="switchView('feedView')">←</span>
+                <span style="font-weight: bold; font-size: 16px;">mujeeb995616</span>
+            </div>
+            <div class="header-icons" style="font-size: 18px;">✏️</div>
+        </div>
+        <div style="padding: 12px 16px; font-weight: bold; font-size: 16px;">Messages</div>
+        <div style="padding: 0 16px 10px 16px;">
+            <input type="text" placeholder="Search chats..." style="width: 100%; padding: 10px 14px; background: #111; border: none; border-radius: 10px; color: #fff; outline: none;">
+        </div>
+        <div>
+            <div class="msg-row" onclick="openChatRoom('Sanskari Balak')">
+                <div class="msg-user-box">
+                    <img src="https://picsum.photos/100/100?random=2" class="msg-avatar">
+                    <div>
+                        <b>Sanskari Balak</b>
+                        <div style="font-size: 13px; color: #888; margin-top: 2px;">नमस्ते भाई, कैसे हो? · 2h</div>
+                    </div>
+                </div>
+                <span style="color: #0084ff; font-size: 16px;">●</span>
+            </div>
+        </div>
     </div>
 
-    <!-- Chat Room UI -->
-    <div id="chatRoom">
-        <div class="chat-room-header">
+    <!-- CHAT ROOM DETAIL VIEW -->
+    <div id="chatRoomBox">
+        <div class="chatroom-header">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px; cursor: pointer;" onclick="closeChat()">←</span>
-                <b id="roomName">User</b>
+                <span style="font-size: 20px; cursor: pointer;" onclick="closeChatRoom()">←</span>
+                <img src="https://picsum.photos/100/100?random=2" style="width: 34px; height: 34px; border-radius: 50%;">
+                <span id="activeChatUser" style="font-weight: 600; font-size: 15px;">Sanskari Balak</span>
             </div>
-            <div style="display: flex; gap: 20px; font-size: 18px; cursor: pointer;">
-                <span onclick="startCall('audio')">📞</span>
-                <span onclick="startCall('video')">📹</span>
+            <div style="display: flex; gap: 20px; font-size: 20px; cursor: pointer;">
+                <span onclick="startAudioOrVideoCall('audio')">📞</span>
+                <span onclick="startAudioOrVideoCall('video')">📹</span>
             </div>
         </div>
-        <div class="messages-container" id="msgBox">
-            <div class="msg incoming">नमस्ते भाई! सब ठीक है?</div>
+        <div class="chatroom-msgs" id="chatMsgContainer">
+            <div class="bubble">नमस्ते! कैसे हो?</div>
+            <div class="bubble sent">सब बढ़िया है भाई!</div>
         </div>
-        <div class="chat-footer">
-            <input type="text" id="msgInput" placeholder="संदेश टाइप करें...">
-            <button onclick="sendMsg()">भेजें</button>
+        <div class="chatroom-footer">
+            <input type="text" id="chatTextInput" placeholder="Message...">
+            <span style="font-size: 20px; cursor: pointer; color: #0084ff;" onclick="sendChatMessage()">➤</span>
         </div>
     </div>
 
-    <!-- Call Screen UI -->
-    <div id="callScreen">
-        <div class="call-avatar-big">📞</div>
-        <h2 id="callTitle" style="margin-bottom: 5px;">कॉल हो रही है...</h2>
-        <p id="callTarget" style="color: #94a3b8;">Sanskari Balak</p>
-        <div class="call-buttons">
-            <button class="c-btn" style="background: #ef4444;" onclick="endCall()">❌</button>
-            <button class="c-btn" style="background: #22c55e;" onclick="alert('कॉल कनेक्ट हो गई है!')">✔️</button>
+    <!-- CALL SCREEN OVERLAY -->
+    <div id="callOverlayBox">
+        <img src="https://picsum.photos/100/100?random=2" class="call-user-img">
+        <h2 id="callStatusText" style="margin-bottom: 5px;">Calling...</h2>
+        <p style="color: #888; font-size: 14px;">Sanskari Balak</p>
+        <div class="call-btn-group">
+            <button class="call-action-btn" style="background: #ff3b30;" onclick="hangUpCall()">❌</button>
+            <button class="call-action-btn" style="background: #34c759;" onclick="alert('कॉल कनेक्ट हो गई है!')">📞</button>
         </div>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="nav-bar">
-        <button class="nav-tab active" onclick="switchScreen('chatsScreen', this)">💬</button>
-        <button class="nav-tab" onclick="switchScreen('profileScreen', this)">👤</button>
+    <!-- 3. PROFILE VIEW -->
+    <div id="profileView" class="app-view">
+        <div class="top-header">
+            <span style="font-weight: bold; font-size: 18px;">mujeeb995616 ∨</span>
+            <div class="header-icons">
+                <span>➕</span>
+                <span>☰</span>
+            </div>
+        </div>
+        <div style="padding: 15px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <img src="https://picsum.photos/100/100?random=1" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+                <div style="display: flex; gap: 20px; text-align: center; font-size: 13px;">
+                    <div><b>16</b><br>posts</div>
+                    <div><b>68</b><br>followers</div>
+                    <div><b>74</b><br>following</div>
+                </div>
+            </div>
+            <div style="font-size: 13px; line-height: 1.4;">
+                <b>Mujeeb Mujeeb</b><br>
+                AI Developer & Creator<br>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-navigation">
+        <button class="nav-icon-btn" onclick="switchView('feedView')">🏠</button>
+        <button class="nav-icon-btn" onclick="switchView('chatsView')">💬</button>
+        <button class="nav-icon-btn" onclick="alert('नया पोस्ट अपलोड करें')">➕</button>
+        <button class="nav-icon-btn" onclick="switchView('profileView')">👤</button>
     </div>
 
     <script>
-        function switchScreen(screenId, btn) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            btn.classList.add('active');
+        // व्यू स्विच करने का मुख्य फंक्शन
+        function switchView(viewId) {
+            document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
         }
 
-        function openChat(name) {
-            document.getElementById('roomName').innerText = name;
-            document.getElementById('chatRoom').style.display = 'flex';
+        // चैट रूम खोलना
+        function openChatRoom(userName) {
+            document.getElementById('activeChatUser').innerText = userName;
+            document.getElementById('chatRoomBox').style.display = 'flex';
         }
 
-        function closeChat() {
-            document.getElementById('chatRoom').style.display = 'none';
+        // चैट रूम बंद करना
+        function closeChatRoom() {
+            document.getElementById('chatRoomBox').style.display = 'none';
         }
 
-        function sendMsg() {
-            const input = document.getElementById('msgInput');
+        // मैसेज भेजना
+        function sendChatMessage() {
+            const input = document.getElementById('chatTextInput');
             if(!input.value.trim()) return;
-            const box = document.getElementById('msgBox');
-            box.innerHTML += `<div class="msg outgoing">${input.value}</div>`;
+            const container = document.getElementById('chatMsgContainer');
+            container.innerHTML += `<div class="bubble sent">${input.value}</div>`;
             input.value = '';
-            box.scrollTop = box.scrollHeight;
+            container.scrollTop = container.scrollHeight;
         }
 
-        function startCall(type) {
-            document.getElementById('callTitle').innerText = type === 'audio' ? 'ऑडियो कॉल चालू है...' : 'वीडियो कॉल चालू है...';
-            document.getElementById('callScreen').style.display = 'flex';
+        // ऑडियो या वीडियो कॉल स्क्रीन दिखाना
+        function startAudioOrVideoCall(type) {
+            const overlay = document.getElementById('callOverlayBox');
+            const status = document.getElementById('callStatusText');
+            status.innerText = type === 'audio' ? 'Audio Calling...' : 'Video Calling...';
+            overlay.style.display = 'flex';
         }
 
-        function endCall() {
-            document.getElementById('callScreen').style.display = 'none';
+        // कॉल काटना
+        function hangUpCall() {
+            document.getElementById('callOverlayBox').style.display = 'none';
         }
     </script>
 </body>
