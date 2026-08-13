@@ -5,78 +5,111 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VibeGram - Social & Connect</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: #000; color: #fff; padding-bottom: 60px; overflow-x: hidden; }
+        :root {
+            --bg-color: #000;
+            --text-color: #fff;
+            --border-color: #222;
+            --card-bg: #111;
+            --header-bg: #000;
+        }
+        [data-theme="light"] {
+            --bg-color: #f9f9f9;
+            --text-color: #000;
+            --border-color: #dbdbdb;
+            --card-bg: #fff;
+            --header-bg: #fff;
+        }
 
-        /* Views management */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 60px; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+
         .app-view { display: none; }
         .app-view.active { display: block; }
 
         /* Header */
-        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid #222; position: sticky; top: 0; background: #000; z-index: 10; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); position: sticky; top: 0; background: var(--header-bg); z-index: 10; }
         .app-brand { font-size: 22px; font-weight: bold; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .header-icons { display: flex; gap: 20px; font-size: 20px; cursor: pointer; }
 
         /* Stories Bar */
-        .stories-row { display: flex; gap: 12px; padding: 10px 12px; overflow-x: auto; border-bottom: 0.5px solid #222; scrollbar-width: none; }
+        .stories-row { display: flex; gap: 12px; padding: 10px 12px; overflow-x: auto; border-bottom: 0.5px solid var(--border-color); scrollbar-width: none; background: var(--header-bg); }
         .stories-row::-webkit-scrollbar { display: none; }
         .story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; flex-shrink: 0; }
         .story-ring { width: 62px; height: 62px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #00f2fe, #4facfe); position: relative; }
-        .story-ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #000; object-fit: cover; }
+        .story-ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--bg-color); object-fit: cover; }
 
         /* Feed Posts */
         .feed-box { max-width: 470px; margin: 0 auto; }
-        .post-box { margin-bottom: 15px; border-bottom: 0.5px solid #222; }
+        .post-box { margin-bottom: 15px; border-bottom: 0.5px solid var(--border-color); background: var(--card-bg); }
         .post-top { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
         .post-user { display: flex; align-items: center; gap: 10px; }
         .avatar-circle { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #333; }
-        .post-img { width: 100%; max-height: 500px; object-fit: cover; display: block; background: #111; }
+        .post-img, .post-video { width: 100%; max-height: 500px; object-fit: cover; display: block; background: #111; }
         .post-actions { padding: 10px 12px; display: flex; justify-content: space-between; font-size: 22px; }
-        .action-group { display: flex; gap: 16px; }
+        .action-group { display: flex; gap: 16px; cursor: pointer; }
         .post-desc { padding: 0 12px 12px 12px; font-size: 13px; line-height: 1.4; }
 
-        /* Chats / Messages View */
-        .chat-list-page { padding: 0; }
+        /* Upload Modal */
+        #uploadModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; display: none; justify-content: center; align-items: flex-end; }
+        .upload-sheet { width: 100%; max-width: 500px; background: #121212; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .upload-option-btn { width: 100%; padding: 14px; background: #222; border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        /* Chats View */
         .msg-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; }
-        .msg-row:hover { background: #111; }
+        .msg-row:hover { background: rgba(128,128,128,0.1); }
         .msg-user-box { display: flex; align-items: center; gap: 12px; }
         .msg-avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
 
         /* Chat Room UI */
-        #chatRoomBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; }
-        .chatroom-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid #222; background: #000; }
+        #chatRoomBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 100; display: none; flex-direction: column; }
+        .chatroom-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 0.5px solid var(--border-color); background: var(--header-bg); }
         .chatroom-msgs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14px; word-break: break-word; background: #222; }
+        .bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14px; word-break: break-word; background: #222; color: #fff; }
         .bubble.sent { background: #0084ff; align-self: flex-end; }
-        .chatroom-footer { display: flex; align-items: center; padding: 10px; border-top: 0.5px solid #222; background: #000; gap: 10px; }
-        .chatroom-footer input { flex: 1; background: #111; border: 0.5px solid #333; padding: 12px; border-radius: 24px; color: #fff; outline: none; font-size: 14px; }
+        .chatroom-footer { display: flex; align-items: center; padding: 10px; border-top: 0.5px solid var(--border-color); background: var(--header-bg); gap: 10px; }
+        .chatroom-footer input { flex: 1; background: var(--card-bg); border: 0.5px solid var(--border-color); padding: 12px; border-radius: 24px; color: var(--text-color); outline: none; font-size: 14px; }
 
-        /* Calling Screen Overlay */
-        #callOverlayBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 500; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        /* Call Screen Overlay */
+        #callOverlayBox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 500; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: #fff; }
         .call-user-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; margin-bottom: 20px; border: 2px solid #0084ff; }
         .call-btn-group { display: flex; gap: 50px; margin-top: 50px; }
         .call-action-btn { width: 65px; height: 65px; border-radius: 50%; border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #fff; }
 
+        /* Unique Extra Feature Panel inside Profile */
+        .unique-features-box { margin: 15px; padding: 15px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; }
+
         /* Bottom Nav Bar */
-        .bottom-navigation { position: fixed; bottom: 0; left: 0; right: 0; height: 52px; background: #000; border-top: 0.5px solid #222; display: flex; justify-content: space-around; align-items: center; z-index: 50; }
-        .nav-icon-btn { font-size: 22px; cursor: pointer; color: #fff; background: none; border: none; }
+        .bottom-navigation { position: fixed; bottom: 0; left: 0; right: 0; height: 52px; background: var(--header-bg); border-top: 0.5px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 50; }
+        .nav-icon-btn { font-size: 22px; cursor: pointer; color: var(--text-color); background: none; border: none; }
     </style>
 </head>
-<body>
+<body data-theme="dark">
+
+    <input type="file" id="cameraInput" style="display: none;" accept="image/*,video/*" capture="environment" onchange="handleFileSelected(this)">
+    <input type="file" id="galleryInput" style="display: none;" accept="image/*,video/*" onchange="handleFileSelected(this)">
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" onclick="closeUploadModal(event)">
+        <div class="upload-sheet">
+            <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #fff;">नई पोस्ट बनाएं</div>
+            <button class="upload-option-btn" onclick="openCamera()">📷 कैमरा से फोटो/वीडियो बनाएं</button>
+            <button class="upload-option-btn" onclick="openGallery()">📁 गैलरी से चुनें</button>
+            <button class="upload-option-btn" style="background: #333; color: #ff3b30;" onclick="document.getElementById('uploadModal').style.display='none'">रद्द करें</button>
+        </div>
+    </div>
 
     <!-- 1. HOME FEED VIEW -->
     <div id="feedView" class="app-view active">
         <div class="top-header">
             <div class="app-brand">VibeGram</div>
             <div class="header-icons">
-                <span>♡</span>
+                <span onclick="toggleTheme()" title="Theme Switcher">☀️/🌙</span>
                 <span onclick="switchView('chatsView')">✈︎</span>
             </div>
         </div>
 
-        <!-- Stories Section -->
         <div class="stories-row">
-            <div class="story-item" onclick="alert('स्टोरी जोड़ें')">
+            <div class="story-item" onclick="showUploadOptions()">
                 <div class="story-ring">
                     <img src="https://picsum.photos/100/100?random=1" alt="You">
                 </div>
@@ -88,16 +121,9 @@
                 </div>
                 <span>Sanskari</span>
             </div>
-            <div class="story-item" onclick="openChatRoom('Shubham Gupta')">
-                <div class="story-ring">
-                    <img src="https://picsum.photos/100/100?random=3" alt="User">
-                </div>
-                <span>Shubham</span>
-            </div>
         </div>
 
-        <!-- Feed Posts List -->
-        <div class="feed-box">
+        <div class="feed-box" id="dynamicFeedContainer">
             <div class="post-box">
                 <div class="post-top">
                     <div class="post-user">
@@ -109,9 +135,9 @@
                 <img src="https://picsum.photos/600/600?random=10" class="post-img">
                 <div class="post-actions">
                     <div class="action-group">
-                        <span>♡</span>
-                        <span>💬</span>
-                        <span>✈︎</span>
+                        <span onclick="likePost(this)">♡</span>
+                        <span onclick="switchView('chatsView')">💬</span>
+                        <span onclick="shareAppContent()">✈︎</span>
                     </div>
                     <span>🔖</span>
                 </div>
@@ -134,7 +160,7 @@
         </div>
         <div style="padding: 12px 16px; font-weight: bold; font-size: 16px;">Messages</div>
         <div style="padding: 0 16px 10px 16px;">
-            <input type="text" placeholder="Search chats..." style="width: 100%; padding: 10px 14px; background: #111; border: none; border-radius: 10px; color: #fff; outline: none;">
+            <input type="text" placeholder="Search chats..." style="width: 100%; padding: 10px 14px; background: var(--card-bg); border: 0.5px solid var(--border-color); border-radius: 10px; color: var(--text-color); outline: none;">
         </div>
         <div>
             <div class="msg-row" onclick="openChatRoom('Sanskari Balak')">
@@ -168,7 +194,7 @@
             <div class="bubble sent">सब बढ़िया है भाई!</div>
         </div>
         <div class="chatroom-footer">
-            <input type="text" id="chatTextInput" placeholder="Message...">
+            <input type="text" id="chatTextInput" placeholder="Message..." onkeypress="checkEnter(event)">
             <span style="font-size: 20px; cursor: pointer; color: #0084ff;" onclick="sendChatMessage()">➤</span>
         </div>
     </div>
@@ -184,13 +210,13 @@
         </div>
     </div>
 
-    <!-- 3. PROFILE VIEW -->
+    <!-- 3. PROFILE VIEW WITH EXTRA UNIQUE FEATURES -->
     <div id="profileView" class="app-view">
         <div class="top-header">
-            <span style="font-weight: bold; font-size: 18px;">mujeeb995616 ∨</span>
+            <span style="font-weight: bold; font-size: 18px;" id="profileUsernameDisplay">mujeeb995616 ∨</span>
             <div class="header-icons">
-                <span>➕</span>
-                <span>☰</span>
+                <span onclick="showUploadOptions()">➕</span>
+                <span onclick="shareAppContent()">🔗</span>
             </div>
         </div>
         <div style="padding: 15px;">
@@ -202,9 +228,18 @@
                     <div><b>74</b><br>following</div>
                 </div>
             </div>
-            <div style="font-size: 13px; line-height: 1.4;">
-                <b>Mujeeb Mujeeb</b><br>
-                AI Developer & Creator<br>
+            <div style="font-size: 13px; line-height: 1.4;" id="bioContainer">
+                <b id="bioName">Mujeeb Mujeeb</b><br>
+                <span id="bioText">AI Developer & Creator</span><br>
+            </div>
+
+            <!-- Unique Customization Box (Extra Feature not in Insta) -->
+            <div class="unique-features-box">
+                <h4 style="margin-bottom: 8px; font-size: 14px; color: #00f2fe;">✨ यूनीक सेटिंग्स (एक्स्ट्रा फीचर्स)</h4>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <input type="text" id="customNameInput" placeholder="अपना नाम बदलें..." style="padding: 8px; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-color); border-radius: 6px; font-size: 13px;">
+                    <button onclick="updateProfileBio()" style="padding: 8px; background: #0084ff; border: none; color: #fff; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px;">प्रोफाइल अपडेट करें</button>
+                </div>
             </div>
         </div>
     </div>
@@ -213,29 +248,25 @@
     <div class="bottom-navigation">
         <button class="nav-icon-btn" onclick="switchView('feedView')">🏠</button>
         <button class="nav-icon-btn" onclick="switchView('chatsView')">💬</button>
-        <button class="nav-icon-btn" onclick="alert('नया पोस्ट अपलोड करें')">➕</button>
+        <button class="nav-icon-btn" onclick="showUploadOptions()">➕</button>
         <button class="nav-icon-btn" onclick="switchView('profileView')">👤</button>
     </div>
 
     <script>
-        // व्यू स्विच करने का मुख्य फंक्शन
         function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
         }
 
-        // चैट रूम खोलना
         function openChatRoom(userName) {
             document.getElementById('activeChatUser').innerText = userName;
             document.getElementById('chatRoomBox').style.display = 'flex';
         }
 
-        // चैट रूम बंद करना
         function closeChatRoom() {
             document.getElementById('chatRoomBox').style.display = 'none';
         }
 
-        // मैसेज भेजना
         function sendChatMessage() {
             const input = document.getElementById('chatTextInput');
             if(!input.value.trim()) return;
@@ -245,7 +276,10 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // ऑडियो या वीडियो कॉल स्क्रीन दिखाना
+        function checkEnter(e) {
+            if(e.key === 'Enter') sendChatMessage();
+        }
+
         function startAudioOrVideoCall(type) {
             const overlay = document.getElementById('callOverlayBox');
             const status = document.getElementById('callStatusText');
@@ -253,9 +287,113 @@
             overlay.style.display = 'flex';
         }
 
-        // कॉल काटना
         function hangUpCall() {
             document.getElementById('callOverlayBox').style.display = 'none';
+        }
+
+        function showUploadOptions() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeUploadModal(e) {
+            if (e.target.id === 'uploadModal') {
+                document.getElementById('uploadModal').style.display = 'none';
+            }
+        }
+
+        function openCamera() {
+            document.getElementById('uploadModal').style.display = 'none';
+            document.getElementById('cameraInput').click();
+        }
+
+        function openGallery() {
+            document.getElementById('uploadModal').style.display = 'none';
+            document.getElementById('galleryInput').click();
+        }
+
+        function handleFileSelected(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const feed = document.getElementById('dynamicFeedContainer');
+                    const isVideo = file.type.startsWith('video');
+                    
+                    let mediaHTML = isVideo 
+                        ? `<video src="${e.target.result}" class="post-video" controls autoplay muted></video>`
+                        : `<img src="${e.target.result}" class="post-img">`;
+
+                    const newPostHTML = `
+                        <div class="post-box">
+                            <div class="post-top">
+                                <div class="post-user">
+                                    <img src="https://picsum.photos/100/100?random=1" class="avatar-circle">
+                                    <span>mujeeb995616</span>
+                                </div>
+                                <span>•••</span>
+                            </div>
+                            ${mediaHTML}
+                            <div class="post-actions">
+                                <div class="action-group">
+                                    <span onclick="likePost(this)">♡</span>
+                                    <span onclick="switchView('chatsView')">💬</span>
+                                    <span onclick="shareAppContent()">✈︎</span>
+                                </div>
+                                <span>🔖</span>
+                            </div>
+                            <div class="post-desc">
+                                <b>1 like</b><br>
+                                <b>mujeeb995616</b> नई मीडिया पोस्ट साझा की गई! 🚀
+                            </div>
+                        </div>
+                    `;
+                    feed.insertAdjacentHTML('afterbegin', newPostHTML);
+                    switchView('feedView');
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Extra Unique Features JS
+        function toggleTheme() {
+            const body = document.body;
+            if(body.getAttribute('data-theme') === 'dark') {
+                body.setAttribute('data-theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        function likePost(span) {
+            if(span.style.color === 'rgb(239, 68, 68)') {
+                span.style.color = '';
+                span.innerText = '♡';
+            } else {
+                span.style.color = '#ef4444';
+                span.innerText = '❤️';
+            }
+        }
+
+        function shareAppContent() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'VibeGram App',
+                    text: 'मेरे नए सोशल मीडिया ऐप को देखें!',
+                    url: window.location.href,
+                }).catch(console.error);
+            } else {
+                alert('लिंक कॉपी कर लिया गया है!');
+            }
+        }
+
+        function updateProfileBio() {
+            const newName = document.getElementById('customNameInput').value;
+            if(newName.trim()) {
+                document.getElementById('bioName').innerText = newName;
+                document.getElementById('profileUsernameDisplay').innerText = newName.toLowerCase().replace(/\s+/g, '') + ' ∨';
+                alert('प्रोफाइल सफलताપूर्वक अपडेट हो गई!');
+            }
         }
     </script>
 </body>
