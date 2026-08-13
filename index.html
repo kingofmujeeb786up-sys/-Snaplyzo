@@ -35,9 +35,10 @@
         .stories-row { display: flex; gap: 12px; padding: 10px 12px; overflow-x: auto; border-bottom: 0.5px solid var(--border-color); scrollbar-width: none; background: var(--header-bg); }
         .stories-row::-webkit-scrollbar { display: none; }
         .story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; flex-shrink: 0; width: 68px; text-align: center; }
-        .story-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: #555; position: relative; }
+        .story-ring { width: 64px; height: 64px; border-radius: 50%; padding: 2px; background: #555; position: relative; display: flex; align-items: center; justify-content: center; }
         .story-ring.active-story { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
         .story-ring img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--bg-color); object-fit: cover; }
+        .story-add-badge { position: absolute; bottom: 0; right: 0; background: #0095f6; color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; border: 2px solid var(--bg-color); font-weight: bold; }
         .story-item span { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
         /* Instagram Story Viewer Modal */
@@ -105,16 +106,14 @@
 </head>
 <body data-theme="dark">
 
-    <!-- Hidden Direct Camera & Gallery Inputs -->
-    <!-- 1. For Stories -->
+    <!-- Hidden Inputs -->
     <input type="file" id="cameraStoryInput" style="display: none;" accept="image/*,video/*" capture="environment" onchange="handleFileSelected(this, 'story')">
     <input type="file" id="galleryStoryInput" style="display: none;" accept="image/*,video/*" onchange="handleFileSelected(this, 'story')">
     
-    <!-- 2. For Reels / Posts -->
     <input type="file" id="cameraPostInput" style="display: none;" accept="image/*,video/*" capture="environment" onchange="handleFileSelected(this, 'post')">
     <input type="file" id="galleryPostInput" style="display: none;" accept="image/*,video/*" onchange="handleFileSelected(this, 'post')">
 
-    <!-- Upload Selection Modal (Instagram Style) -->
+    <!-- Upload Selection Modal -->
     <div id="uploadModal" onclick="closeUploadModal(event)">
         <div class="upload-sheet">
             <div style="text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #fff;" id="uploadModalTitle">नया अपलोड</div>
@@ -137,7 +136,7 @@
             <button class="story-close-btn" onclick="closeStoryViewer()">×</button>
         </div>
         <div class="story-viewer-content" id="storyViewerMediaContainer"></div>
-        <div style="padding: 10px 15px; text-align: center; color: #aaa; font-size: 13px;">अभी अपलोड की गई</div>
+        <div id="storyCounterText" style="padding: 5px 15px; text-align: center; color: #aaa; font-size: 12px;"></div>
     </div>
 
     <!-- 1. HOME FEED VIEW -->
@@ -152,13 +151,25 @@
 
         <!-- Stories Row -->
         <div class="stories-row" id="storiesContainer">
+            <!-- 1. Dedicated Add Story Button (Always available to add new stories) -->
             <div class="story-item" onclick="openUploadChooser('story')">
-                <div class="story-ring" id="myStoryRing">
+                <div class="story-ring" style="background: #333; border: 2px dashed #777;">
+                    <img src="https://picsum.photos/100/100?random=1" alt="You" style="opacity: 0.6;">
+                    <div class="story-add-badge">+</div>
+                </div>
+                <span>Add Story</span>
+            </div>
+
+            <!-- 2. User's Existing Stories Ring (Click to view active stories if uploaded) -->
+            <div class="story-item" id="myActiveStoryItem" style="display: none;" onclick="openMyStoriesViewer()">
+                <div class="story-ring active-story" id="myStoryRing">
                     <img src="https://picsum.photos/100/100?random=1" alt="You">
                 </div>
                 <span>Your story</span>
             </div>
-            <div class="story-item" onclick="viewStaticStory('Sanskari Balak', 'https://picsum.photos/100/100?random=2', 'https://picsum.photos/600/900?random=20', false)">
+
+            <!-- Static Friend Story -->
+            <div class="story-item" onclick="viewStaticStory('Sanskari Balak', 'https://picsum.photos/100/100?random=2', ['https://picsum.photos/600/900?random=20'], false)">
                 <div class="story-ring active-story">
                     <img src="https://picsum.photos/100/100?random=2" alt="User">
                 </div>
@@ -201,7 +212,7 @@
                 <span onclick="openUploadChooser('post')">📷</span>
             </div>
         </div>
-        <div class="reels-container">
+        <div class="reels-container" id="reelsContainerBox">
             <div class="reel-card">
                 <video src="https://assets.mixkit.co/videos/preview/mixkit-tree-branches-in-the-breeze-1195-large.mp4" class="reel-video" autoplay loop muted></video>
                 <div class="reel-overlay-info">
@@ -216,23 +227,6 @@
                     <span style="font-size: 14px; text-align: center;">12.4k</span>
                     <span>💬</span>
                     <span style="font-size: 14px; text-align: center;">420</span>
-                    <span onclick="shareAppContent()">✈︎</span>
-                </div>
-            </div>
-            <div class="reel-card">
-                <video src="https://assets.mixkit.co/videos/preview/mixkit-waves-in-the-water-1164-large.mp4" class="reel-video" autoplay loop muted></video>
-                <div class="reel-overlay-info">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <img src="https://picsum.photos/100/100?random=3" style="width: 30px; height: 30px; border-radius: 50%;">
-                        <b>OceanWaves</b>
-                    </div>
-                    <p style="font-size: 13px;">लहरों की आवाज़ सुकून देती है 🌊</p>
-                </div>
-                <div class="reel-side-actions">
-                    <span onclick="likePost(this)">❤️</span>
-                    <span style="font-size: 14px; text-align: center;">45.1k</span>
-                    <span>💬</span>
-                    <span style="font-size: 14px; text-align: center;">1.2k</span>
                     <span onclick="shareAppContent()">✈︎</span>
                 </div>
             </div>
@@ -313,7 +307,7 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                 <img src="https://picsum.photos/100/100?random=1" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
                 <div style="display: flex; gap: 20px; text-align: center; font-size: 13px;">
-                    <div><b>16</b><br>posts</div>
+                    <div><b id="postCountDisplay">16</b><br>posts</div>
                     <div><b>68</b><br>followers</div>
                     <div><b>74</b><br>following</div>
                 </div>
@@ -343,9 +337,11 @@
     </div>
 
     <script>
-        let currentUploadType = 'story'; // 'story' or 'post'
-        let mySavedStory = null;
+        let currentUploadType = 'story'; 
+        let myStoriesList = []; // Array to store multiple user stories
+        let currentStoryIndex = 0;
         let storyTimer = null;
+        let totalPostsCount = 16;
 
         function switchView(viewId) {
             document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
@@ -385,10 +381,9 @@
             document.getElementById('callOverlayBox').style.display = 'none';
         }
 
-        // Upload Chooser Modal Handler
         function openUploadChooser(type) {
             currentUploadType = type;
-            document.getElementById('uploadModalTitle').innerText = type === 'story' ? 'स्टोरी जोड़ें' : 'नई पोस्ट / रील बनाएं';
+            document.getElementById('uploadModalTitle').innerText = type === 'story' ? 'नई स्टोरी जोड़ें' : 'नई पोस्ट / रील बनाएं';
             document.getElementById('uploadModal').style.display = 'flex';
         }
 
@@ -398,7 +393,6 @@
             }
         }
 
-        // Direct Camera Trigger
         function triggerCamera() {
             document.getElementById('uploadModal').style.display = 'none';
             if (currentUploadType === 'story') {
@@ -408,7 +402,6 @@
             }
         }
 
-        // Gallery Trigger
         function triggerGallery() {
             document.getElementById('uploadModal').style.display = 'none';
             if (currentUploadType === 'story') {
@@ -418,7 +411,7 @@
             }
         }
 
-        // Handle File Selection (Camera or Gallery)
+        // Save selected files permanently in app state
         function handleFileSelected(input, type) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -429,14 +422,22 @@
                     const isVideo = file.type.startsWith('video');
 
                     if(type === 'story') {
-                        mySavedStory = { url: mediaUrl, isVideo: isVideo };
-                        const ring = document.getElementById('myStoryRing');
-                        ring.classList.add('active-story');
-                        alert('स्टोरी सफलतापूर्वक सेव हो गई है!');
+                        // Push new story into array so multiple stories are saved
+                        myStoriesList.push({ url: mediaUrl, isVideo: isVideo });
+                        
+                        // Show user active story ring container
+                        document.getElementById('myActiveStoryItem').style.display = 'flex';
+                        alert('स्टोरी सफलतापूर्वक सेव हो गई है! अब आप अपनी रिंग पर क्लिक करके देख सकते हैं।');
                         switchView('feedView');
                     } else {
+                        // Check if it's a short video or image post and save to feed/reels
+                        if(isVideo) {
+                            addNewReelToReels(mediaUrl);
+                        }
                         addNewPostToFeed(mediaUrl, isVideo);
-                        alert('पोस्ट/रील सफलतापूर्वक अपलोड हो गई है!');
+                        totalPostsCount++;
+                        document.getElementById('postCountDisplay').innerText = totalPostsCount;
+                        alert('पोस्ट/रील सफलतापूर्वक सेव और अपलोड हो गई है!');
                         switchView('feedView');
                     }
                 }
@@ -444,17 +445,25 @@
             }
         }
 
-        // Click handler for 'Your story' in feed
-        document.getElementById('myStoryRing').parentElement.onclick = function() {
-            if (!mySavedStory) {
-                openUploadChooser('story');
-            } else {
-                openStoryViewer('mujeeb995616', 'https://picsum.photos/100/100?random=1', mySavedStory.url, mySavedStory.isVideo);
-            }
-        };
+        // Open viewer for user's multiple stories
+        function openMyStoriesViewer() {
+            if (myStoriesList.length === 0) return;
+            currentStoryIndex = 0;
+            playStorySequence();
+        }
 
-        function viewStaticStory(username, avatar, mediaUrl, isVideo) {
-            openStoryViewer(username, avatar, mediaUrl, isVideo);
+        function playStorySequence() {
+            if (currentStoryIndex >= myStoriesList.length) {
+                closeStoryViewer();
+                return;
+            }
+            const story = myStoriesList[currentStoryIndex];
+            openStoryViewer('mujeeb995616', 'https://picsum.photos/100/100?random=1', story.url, story.isVideo);
+            document.getElementById('storyCounterText').innerText = `स्टोरी ${currentStoryIndex + 1} / ${myStoriesList.length}`;
+        }
+
+        function viewStaticStory(username, avatar, mediaUrls, isVideo) {
+            openStoryViewer(username, avatar, mediaUrls[0], isVideo);
         }
 
         function openStoryViewer(username, avatar, mediaUrl, isVideo) {
@@ -482,7 +491,8 @@
             if(storyTimer) clearTimeout(storyTimer);
             if(!isVideo) {
                 storyTimer = setTimeout(() => {
-                    closeStoryViewer();
+                    currentStoryIndex++;
+                    playStorySequence();
                 }, 5000);
             }
         }
@@ -523,6 +533,30 @@
                 </div>
             `;
             feed.insertAdjacentHTML('afterbegin', newPostHTML);
+        }
+
+        function addNewReelToReels(mediaUrl) {
+            const reelsBox = document.getElementById('reelsContainerBox');
+            const newReelHTML = `
+                <div class="reel-card">
+                    <video src="${mediaUrl}" class="reel-video" autoplay loop muted controls></video>
+                    <div class="reel-overlay-info">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <img src="https://picsum.photos/100/100?random=1" style="width: 30px; height: 30px; border-radius: 50%;">
+                            <b>mujeeb995616</b>
+                        </div>
+                        <p style="font-size: 13px;">मेरी नई रील! 🎬 #vibe #reels</p>
+                    </div>
+                    <div class="reel-side-actions">
+                        <span onclick="likePost(this)">❤️</span>
+                        <span style="font-size: 14px; text-align: center;">1</span>
+                        <span>💬</span>
+                        <span style="font-size: 14px; text-align: center;">0</span>
+                        <span onclick="shareAppContent()">✈︎</span>
+                    </div>
+                </div>
+            `;
+            reelsBox.insertAdjacentHTML('afterbegin', newReelHTML);
         }
 
         function toggleTheme() {
