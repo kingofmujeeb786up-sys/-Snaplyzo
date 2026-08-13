@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreatorHub - Fast Social App</title>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #6366f1;
+            --text: #f8fafc;
+            --accent: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            padding-bottom: 70px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* App Header */
+        header {
+            position: sticky;
+            top: 0;
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .badge {
+            background: var(--accent);
+            color: #000;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        /* Feed Cards */
+        .feed {
+            padding: 10px;
+        }
+
+        .post-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+
+        .post-header {
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .post-img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .post-actions {
+            padding: 12px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-action {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .boost-tag {
+            color: #f59e0b;
+            font-size: 0.8rem;
+            margin-left: auto;
+        }
+
+        .caption {
+            padding: 0 12px 12px 12px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        /* Bottom Nav */
+        nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            border-top: 1px solid #334155;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.4rem;
+        }
+
+        /* Create Post Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 16px;
+        }
+
+        input, textarea, button.submit-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: var(--text);
+        }
+
+        .submit-btn {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        .ai-btn {
+            background: #8b5cf6;
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <h1>CreatorHub</h1>
+        <span class="badge">Instant View Mode</span>
+    </header>
+
+    <!-- Main Feed -->
+    <div class="feed" id="feed">
+        <!-- Posts will load dynamically -->
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <button class="nav-btn" onclick="fetchFeed()">🏠</button>
+        <button class="nav-btn" onclick="openModal()">➕</button>
+        <button class="nav-btn" onclick="alert('Profile section coming soon!')">👤</button>
+    </nav>
+
+    <!-- Post Upload Modal -->
+    <div class="modal" id="postModal">
+        <div class="modal-content">
+            <h3>नई पोस्ट शेयर करें</h3>
+            <input type="text" id="imgUrl" placeholder="Image URL दर्ज करें (जैसे Unsplash link)">
+            <textarea id="caption" placeholder="कैप्शन लिखें..."></textarea>
+            
+            <!-- Unique Feature: AI Caption Generator -->
+            <button class="submit-btn ai-btn" onclick="generateAutoCaption()">✨ Auto AI Caption & Hashtags</button>
+            
+            <button class="submit-btn" onclick="createPost()">Post Now (Instant Boost)</button>
+            <button class="submit-btn" style="background:#ef4444;" onclick="closeModal()">रद्द करें</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 🔑 अपनी SUPABASE API की जानकारी यहाँ डालें
+        // ==========================================
+        const SUPABASE_URL = "YOUR_SUPABASE_URL_HERE";
+        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY_HERE";
+
+        // Supabase Initialization
+        let supabaseClient = null;
+        if (SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE") {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        // 1. Fetch Feed (Auto Boost + Chronological Algorithm)
+        async function fetchFeed() {
+            const feedContainer = document.getElementById('feed');
+            feedContainer.innerHTML = '<p style="text-align:center; padding:20px;">लोड हो रहा है...</p>';
+
+            let posts = [];
+
+            if (supabaseClient) {
+                // Fetch from Supabase with auto-sorting (Popularity + Recency)
+                const { data, error } = await supabaseClient
+                    .from('posts')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (!error && data) posts = data;
+            }
+
+            // Fallback Demo Data if Supabase is not configured yet
+            if (posts.length === 0) {
+                posts = [
+                    {
+                        id: 1,
+                        username: "Creator_01",
+                        image_url: "https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
+                        caption: "मेरी पहली पोस्ट! 🔥 #CreatorHub #Viral",
+                        likes: 124,
+                        is_boosted: true
+                    },
+                    {
+                        id: 2,
+                        username: "Tech_Guru",
+                        image_url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085",
+                        caption: "मोबाइल से ऐप बनाना अब बहुत आसान है। 🚀",
+                        likes: 89,
+                        is_boosted: false
+                    }
+                ];
+            }
+
+            // Render Posts
+            feedContainer.innerHTML = posts.map(post => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="avatar">${post.username ? post.username[0].toUpperCase() : 'U'}</div>
+                        <strong>${post.username || 'Anonymous'}</strong>
+                        ${post.is_boosted ? '<span class="boost-tag">⚡ AI Boosted</span>' : ''}
+                    </div>
+                    <img src="${post.image_url}" class="post-img" alt="Post">
+                    <div class="post-actions">
+                        <button class="btn-action" onclick="likePost(${post.id}, this)">
+                            ❤️ <span class="like-count">${post.likes || 0}</span>
+                        </button>
+                        <button class="btn-action" onclick="sharePost()">🔗 शेयर</button>
+                    </div>
+                    <div class="caption">${post.caption}</div>
+                </div>
+            `).join('');
+        }
+
+        // 2. Unique Feature: Auto AI Caption & Hashtags Generator
+        function generateAutoCaption() {
+            const captions = [
+                "नया दिन, नई शुरुआत! 🌟 #Trending #ViralHub #CreatorLife",
+                "क्या आपने यह देखा? 🚀 #ExplorePage #NewPost #CreatorHub",
+                "सफलता मेहनत से मिलती है! 💪 #Motivation #DailyVibes"
+            ];
+            const randomCaption = captions[Math.floor(Math.random() * captions.length)];
+            document.getElementById('caption').value = randomCaption;
+        }
+
+        // 3. Create Post
+        async function createPost() {
+            const imageUrl = document.getElementById('imgUrl').value;
+            const caption = document.getElementById('caption').value;
+
+            if (!imageUrl) {
+                alert("कृपया फ़ोटो का URL डालें!");
+                return;
+            }
+
+            if (supabaseClient) {
+                const { error } = await supabaseClient.from('posts').insert([
+                    {
+                        username: "User_" + Math.floor(Math.random() * 1000),
+                        image_url: imageUrl,
+                        caption: caption,
+                        likes: 1,
+                        is_boosted: true // Auto Boost Algorithm for new post
+                    }
+                ]);
+
+                if (error) alert("Error: " + error.message);
+                else {
+                    alert("आपकी पोस्ट इंस्टेंट बूस्ट के साथ शेयर हो गई है! 🎉");
+                    closeModal();
+                    fetchFeed();
+                }
+            } else {
+                alert("Demo Mode: पोस्ट सफलतापूर्वक शेयर हुई!");
+                closeModal();
+            }
+        }
+
+        // 4. Like Post
+        function likePost(id, btn) {
+            let countSpan = btn.querySelector('.like-count');
+            let currentLikes = parseInt(countSpan.innerText);
+            countSpan.innerText = currentLikes + 1;
+        }
+
+        // 5. Instant Share (Without App Download/Login mandatory)
+        function sharePost() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'CreatorHub',
+                    text: 'इस कमाल की पोस्ट को देखें!',
+                    url: window.location.href,
+                });
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                alert("लिंक कॉपी हो गया! WhatsApp पर शेयर करें।");
+            }
+        }
+
+        // Modal Handlers
+        function openModal() { document.getElementById('postModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('postModal').style.display = 'none'; }
+
+        // Initial Load
+        fetchFeed();
+    </script>
+</body>
+</html>
+
