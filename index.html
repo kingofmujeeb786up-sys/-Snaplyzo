@@ -6,45 +6,94 @@
     <title>Snaplyzo</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #000; color: #fff; margin: 0; padding-bottom: 70px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222; position: sticky; top: 0; background: #000; z-index: 10; }
-        .logo { font-size: 22px; font-weight: bold; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #000; color: #fff; padding-bottom: 60px; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #1c1c1e; position: sticky; top: 0; background: #000; z-index: 10; }
+        .logo { font-size: 24px; font-weight: bold; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-icons { display: flex; gap: 15px; align-items: center; }
+        
+        /* Stories */
+        .stories-container { display: flex; gap: 12px; padding: 12px; overflow-x: auto; border-bottom: 1px solid #1c1c1e; scrollbar-width: none; }
+        .stories-container::-webkit-scrollbar { display: none; }
+        .story { display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 11px; }
+        .story-avatar { width: 62px; height: 62px; border-radius: 50%; padding: 2px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+        .story-avatar img { width: 100%; height: 100%; border-radius: 50%; border: 2px solid #000; object-fit: cover; }
+        
+        /* Feed Posts */
         .feed { max-width: 480px; margin: 0 auto; }
-        .post { margin-bottom: 25px; border-bottom: 1px solid #1a1a1a; }
-        .post-header { padding: 10px 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .post img, .post video { width: 100%; max-height: 550px; object-fit: cover; display: block; background: #111; }
-        .post-actions { padding: 10px 12px; display: flex; gap: 15px; font-size: 20px; }
-        .post-info { padding: 0 12px 12px 12px; font-size: 14px; }
-        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid #222; display: flex; justify-content: space-around; padding: 12px 0; max-width: 480px; margin: 0 auto; }
-        .nav button { background: none; border: none; color: #fff; font-size: 18px; cursor: pointer; }
-        .btn { background: #0095f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-        .btn-live { background: #e50914; color: white; border: none; padding: 6px 12px; border-radius: 20px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; }
+        .post { margin-bottom: 15px; border-bottom: 1px solid #121212; }
+        .post-header { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; }
+        .post-header-user { display: flex; align-items: center; gap: 8px; }
+        .user-pic { width: 32px; height: 32px; border-radius: 50%; background: #333; }
+        .post media, .post img, .post video { width: 100%; max-height: 500px; object-fit: cover; display: block; background: #111; }
+        .post-actions { padding: 10px 12px; display: flex; justify-content: space-between; font-size: 22px; }
+        .action-btns { display: flex; gap: 16px; }
+        .post-info { padding: 0 12px 12px 12px; font-size: 14px; line-height: 1.4; }
+        .likes-count { font-weight: 600; margin-bottom: 4px; }
+
+        /* Bottom Navigation */
+        .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 1px solid #1c1c1e; display: flex; justify-content: space-around; padding: 12px 0; max-width: 480px; margin: 0 auto; z-index: 10; }
+        .nav button { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; }
+        
+        /* Buttons & Modals */
+        .btn-live { background: #e50914; color: white; border: none; padding: 5px 12px; border-radius: 18px; font-weight: 600; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 4px; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: #1c1c1e; padding: 20px; border-radius: 14px; width: 85%; max-width: 380px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        input[type="text"] { width: 100%; padding: 10px; margin: 12px 0; box-sizing: border-box; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; color: white; }
+        .modal-content { background: #1c1c1e; padding: 20px; border-radius: 14px; width: 85%; max-width: 380px; text-align: center; }
+        input[type="text"] { width: 100%; padding: 10px; margin: 12px 0; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; color: white; }
         input[type="file"] { margin: 12px 0; color: #aaa; width: 100%; }
-        #liveStream { width: 100%; height: 320px; background: #000; border-radius: 10px; object-fit: cover; }
+        .btn { background: #0095f6; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        #liveStream { width: 100%; height: 300px; background: #000; border-radius: 10px; object-fit: cover; }
     </style>
 </head>
 <body>
 
+    <!-- Top Header -->
     <div class="header">
         <div class="logo">Snaplyzo</div>
-        <button class="btn-live" onclick="openLiveModal()">🔴 LIVE</button>
+        <div class="header-icons">
+            <button class="btn-live" onclick="openLiveModal()">🔴 LIVE</button>
+            <span style="font-size:20px;">🤍</span>
+            <span style="font-size:20px;">⚡</span>
+        </div>
     </div>
 
-    <!-- फ़ीड (Posts & Reels) -->
+    <!-- Instagram Stories Bar -->
+    <div class="stories-container">
+        <div class="story">
+            <div class="story-avatar"><img src="https://picsum.photos/100/100?random=1" alt="You"></div>
+            <span>Your story</span>
+        </div>
+        <div class="story">
+            <div class="story-avatar"><img src="https://picsum.photos/100/100?random=2" alt="User"></div>
+            <span>alex_99</span>
+        </div>
+        <div class="story">
+            <div class="story-avatar"><img src="https://picsum.photos/100/100?random=3" alt="User"></div>
+            <span>riya_vlog</span>
+        </div>
+        <div class="story">
+            <div class="story-avatar"><img src="https://picsum.photos/100/100?random=4" alt="User"></div>
+            <span>fun_memes</span>
+        </div>
+    </div>
+
+    <!-- Main Feed -->
     <div class="feed" id="feed">
         <p style="text-align:center; color:#888; margin-top: 40px;">लोड हो रहा है...</p>
     </div>
 
-    <!-- बॉटम नेविगेशन -->
+    <!-- Bottom Navigation -->
     <div class="nav">
         <button onclick="location.reload()">🏠</button>
+        <button onclick="alert('सर्च फ़ीचर जल्द आ रहा है!')">🔍</button>
         <button onclick="openUploadModal()">➕</button>
+        <button onclick="alert('रील्स सेक्शन ऑन है!')">🎬</button>
+        <button onclick="alert('प्रोफ़ाइल सेक्शन ऑन है!')">👤</button>
     </div>
 
-    <!-- गैलरी से फोटो/रील अपलोड मोडल -->
+    <!-- Gallery Upload Modal -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0;">फोटो या रील अपलोड करें</h3>
@@ -57,10 +106,10 @@
         </div>
     </div>
 
-    <!-- Live Stream Modal (0 Followers Supported) -->
+    <!-- 0 Followers Live Stream Modal -->
     <div id="liveModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0; color:#ff3b30;">🔴 लाइव स्ट्रीमिंग</h3>
+            <h3 style="margin-top:0; color:#ff3b30;">🔴 लाइव स्ट्रीमिंग (0 Followers)</h3>
             <video id="liveStream" autoplay playsinline muted></video>
             <div style="display:flex; gap:10px; justify-content: center; margin-top: 15px;">
                 <button class="btn" style="background:#ff3b30;" onclick="stopLive()">End Live</button>
@@ -70,20 +119,21 @@
     </div>
 
     <script>
+        // Supabase Connection Settings
         const SUPABASE_URL = "https://jcdhkcgaktzopdnnnhpm.supabase.co";
-        const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"; // ⚠️ यहाँ अपनी Supabase Anon Key डालें
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjZGhrY2dha3R6b3Bkbm5uaHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA5ODkyODUsImV4cCI6MjA1NjU2NTI4NX0.gY1YQ1fFpXmIeG3T6PZ5M-8N0X5vL4P8Y0E";
         const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let localStream = null;
 
-        // गैलरी से फोटो / रील अपलोड फ़ंक्शन
+        // Upload Gallery Media (Photos & Reels)
         async function uploadMedia() {
             const fileInput = document.getElementById('mediaFile');
             const caption = document.getElementById('caption').value;
             const uploadBtn = document.getElementById('uploadBtn');
             const file = fileInput.files[0];
 
-            if (!file) return alert("कृपया अपनी गैलरी से कोई फोटो या रील (वीडियो) सेलेक्ट करें!");
+            if (!file) return alert("कृपया गैलरी से फोटो या वीडियो चुनें!");
 
             uploadBtn.innerText = "अपलोड हो रहा है...";
             uploadBtn.disabled = true;
@@ -91,7 +141,6 @@
             const fileExt = file.name.split('.').pop();
             const fileName = `${Date.now()}.${fileExt}`;
 
-            // 1. Storage (media bucket) में फ़ाइल अपलोड
             const { data, error } = await supabase.storage.from('media').upload(fileName, file);
 
             if (error) {
@@ -101,11 +150,9 @@
                 return;
             }
 
-            // 2. Public URL प्राप्त करें
             const { data: publicUrlData } = supabase.storage.from('media').getPublicUrl(fileName);
             const mediaUrl = publicUrlData.publicUrl;
 
-            // 3. Database Table (posts) में डेटा सेव करें
             const { error: dbError } = await supabase.from('posts').insert([
                 { image_url: mediaUrl, caption: caption, username: "user_" + Math.floor(Math.random() * 900 + 100) }
             ]);
@@ -113,7 +160,7 @@
             if (dbError) {
                 alert("डेटाबेस एरर: " + dbError.message);
             } else {
-                alert("सफलतापूर्वक पोस्ट हो गया! 🎉");
+                alert("आपकी पोस्ट/रील अपलोड हो गई! 🎉");
                 closeModal('uploadModal');
                 loadPosts();
             }
@@ -121,18 +168,18 @@
             uploadBtn.disabled = false;
         }
 
-        // फ़ीड में पोस्ट्स और रील्स लोड करें
+        // Load Posts from Database
         async function loadPosts() {
-            const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
             const feed = document.getElementById('feed');
+            const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
 
             if (error) {
-                feed.innerHTML = '<p style="text-align:center; color:red;">डेटा लोड करने में समस्या हुई!</p>';
+                feed.innerHTML = '<p style="text-align:center; color:red; margin-top:30px;">डेटा लोड करने में समस्या हुई!</p>';
                 return;
             }
 
             if (!data || data.length === 0) {
-                feed.innerHTML = '<p style="text-align:center; color:#888; margin-top:40px;">अभी तक कोई पोस्ट नहीं है। ➕ दबाकर पहली पोस्ट डालें!</p>';
+                feed.innerHTML = '<p style="text-align:center; color:#888; margin-top:40px;">अभी कोई पोस्ट नहीं है। ➕ दबाकर पहली फोटो या रील डालें!</p>';
                 return;
             }
 
@@ -147,10 +194,24 @@
 
                 feed.innerHTML += `
                     <div class="post">
-                        <div class="post-header">👤 ${item.username || 'Snaplyzer'}</div>
+                        <div class="post-header">
+                            <div class="post-header-user">
+                                <div class="user-pic"></div>
+                                <span>${item.username || 'Snaplyzer'}</span>
+                            </div>
+                            <span>•••</span>
+                        </div>
                         ${mediaHTML}
-                        <div class="post-actions">❤️ 💬 🚀</div>
+                        <div class="post-actions">
+                            <div class="action-btns">
+                                <span onclick="this.innerText = this.innerText === '❤️' ? '🤍' : '❤️'">🤍</span>
+                                <span>💬</span>
+                                <span>🚀</span>
+                            </div>
+                            <span>🔖</span>
+                        </div>
                         <div class="post-info">
+                            <div class="likes-count">1 likes</div>
                             <b>${item.username || 'Snaplyzer'}</b> ${item.caption || ''}
                         </div>
                     </div>
@@ -158,14 +219,14 @@
             });
         }
 
-        // 0-Follower Live Camera Access
+        // Live Camera Stream Function
         async function openLiveModal() {
             document.getElementById('liveModal').style.display = 'flex';
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('liveStream').srcObject = localStream;
             } catch (err) {
-                alert("कैमरा/माइक एक्सेस करने की अनुमति नहीं मिली!");
+                alert("कैमरा/माइक एक्सेस की अनुमति दें!");
             }
         }
 
@@ -178,6 +239,7 @@
         function openUploadModal() { document.getElementById('uploadModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
+        // Start loading
         loadPosts();
     </script>
 </body>
