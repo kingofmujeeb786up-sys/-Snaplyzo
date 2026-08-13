@@ -3,200 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snaplyzo - Social & Chat</title>
+    <title>Snaplyzo Messenger</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #0d1117; color: #e6edf3; padding-bottom: 70px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: #0f141c; color: #ffffff; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
         /* Top Header */
-        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; position: sticky; top: 0; z-index: 100; }
-        .app-logo { font-size: 20px; font-weight: bold; color: #58a6ff; letter-spacing: 0.5px; }
-        .header-icons { display: flex; gap: 18px; font-size: 20px; cursor: pointer; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161f30; border-bottom: 1px solid #222d42; }
+        .logo { font-size: 18px; font-weight: bold; color: #38bdf8; }
 
-        /* Views System */
-        .app-view { display: none; }
-        .app-view.active { display: block; }
+        /* Main Content Screens */
+        .screen { flex: 1; display: none; flex-direction: column; overflow-y: auto; padding: 10px; }
+        .screen.active { display: flex; }
 
-        /* Home Feed Styles */
-        .feed-container { max-width: 500px; margin: 0 auto; padding: 10px; }
-        .post-card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; margin-bottom: 15px; overflow: hidden; }
-        .post-header { padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; background: #21262d; }
-        .post-avatar { width: 34px; height: 34px; border-radius: 50%; background: #58a6ff; display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
-        .post-media { width: 100%; max-height: 450px; object-fit: cover; background: #000; display: block; }
-        .post-footer { padding: 12px; font-size: 13px; }
-
-        /* Chat List View */
-        .chat-list-container { max-width: 500px; margin: 0 auto; padding: 10px; }
-        .chat-list-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #161b22; border: 1px solid #30363d; border-radius: 10px; margin-bottom: 8px; cursor: pointer; }
-        .chat-list-item:hover { background: #21262d; }
+        /* Chat Item Style */
+        .chat-card { display: flex; align-items: center; justify-content: space-between; background: #161f30; padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid #222d42; }
+        .avatar { width: 45px; height: 45px; border-radius: 50%; background: #38bdf8; color: #000; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
 
         /* Chat Room Screen */
-        #chatRoomScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0d1117; z-index: 200; display: none; flex-direction: column; }
-        .chat-room-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #161b22; border-bottom: 1px solid #30363d; }
-        .chat-messages-box { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .message-bubble { max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; word-break: break-word; }
-        .message-bubble.incoming { background: #21262d; align-self: flex-start; border: 1px solid #30363d; }
-        .message-bubble.outgoing { background: #1f6feb; color: #fff; align-self: flex-end; }
-        .chat-input-area { padding: 12px; background: #161b22; border-top: 1px solid #30363d; display: flex; gap: 10px; }
-        .chat-input-area input { flex: 1; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: #fff; outline: none; font-size: 14px; }
-        .send-btn { background: #238636; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        #chatRoom { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f141c; z-index: 100; display: none; flex-direction: column; }
+        .chat-room-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #161f30; border-bottom: 1px solid #222d42; }
+        .messages-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 14px; word-break: break-word; }
+        .msg.incoming { background: #222d42; align-self: flex-start; }
+        .msg.outgoing { background: #0284c7; color: #fff; align-self: flex-end; }
+        .chat-footer { display: flex; padding: 10px; background: #161f30; border-top: 1px solid #222d42; gap: 10px; }
+        .chat-footer input { flex: 1; padding: 10px; background: #0f141c; border: 1px solid #222d42; border-radius: 8px; color: white; outline: none; }
+        .chat-footer button { background: #0284c7; color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
-        /* Call Overlay Screen */
-        #callOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #090d16; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
-        .caller-avatar { width: 100px; height: 100px; border-radius: 50%; background: #388bfd; font-size: 36px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 3px solid #58a6ff; }
-        .call-actions { display: flex; gap: 30px; margin-top: 40px; }
-        .call-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
+        /* Call Screen Overlay */
+        #callScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #070a0f; z-index: 200; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .call-avatar-big { width: 90px; height: 90px; border-radius: 50%; background: #0284c7; font-size: 32px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 2px solid #38bdf8; }
+        .call-buttons { display: flex; gap: 40px; margin-top: 40px; }
+        .c-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; }
 
-        /* Bottom Navigation Bar */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: #161b22; border-top: 1px solid #30363d; display: flex; justify-content: space-around; align-items: center; z-index: 150; max-width: 500px; margin: 0 auto; }
-        .nav-btn { background: none; border: none; color: #8b949e; font-size: 20px; cursor: pointer; }
-        .nav-btn.active { color: #58a6ff; }
+        /* Bottom Nav */
+        .nav-bar { height: 55px; background: #161f30; border-top: 1px solid #222d42; display: flex; justify-content: space-around; align-items: center; }
+        .nav-tab { background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; }
+        .nav-tab.active { color: #38bdf8; }
     </style>
 </head>
 <body>
 
-    <!-- Top App Header -->
-    <div class="app-header">
-        <div class="app-logo">⚡ Snaplyzo</div>
-        <div class="header-icons">
-            <span onclick="openChatListView()">💬</span>
-            <span onclick="alert('नोटिफिकेशन सेक्शन')">🔔</span>
-        </div>
+    <!-- Top Header -->
+    <div class="header">
+        <div class="logo">⚡ Snaplyzo</div>
+        <div style="font-size: 18px; cursor: pointer;" onclick="alert('नोटिफिकेशन')">🔔</div>
     </div>
 
-    <!-- 1. HOME VIEW (Feed) -->
-    <div id="homeView" class="app-view active">
-        <div class="feed-container" id="feedContent">
-            <div class="post-card">
-                <div class="post-header">
-                    <div class="post-avatar">S</div>
-                    <span>Sanskari Balak</span>
-                </div>
-                <img src="https://picsum.photos/500/400?random=1" class="post-media" alt="Post">
-                <div class="post-footer">
-                    <b>Sanskari Balak</b> शानदार नज़ारा! 🔥
+    <!-- Screen 1: Chats List -->
+    <div id="chatsScreen" class="screen active">
+        <div style="padding: 10px 0; font-size: 15px; font-weight: bold; color: #94a3b8;">कंवर्सेशन (Conversations)</div>
+        <div class="chat-card" onclick="openChat('Sanskari Balak')">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="avatar">SB</div>
+                <div>
+                    <b>Sanskari Balak</b>
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 3px;">नमस्ते! कैसे हो?</div>
                 </div>
             </div>
+            <span style="font-size: 12px; color: #38bdf8;">ऑनलाइन</span>
         </div>
     </div>
 
-    <!-- 2. CHAT LIST VIEW -->
-    <div id="chatListView" class="app-view">
-        <div class="chat-list-container">
-            <h3 style="margin-bottom: 12px; font-size: 16px; color: #8b949e;">संदेश (Messages)</h3>
-            <div class="chat-list-item" onclick="openChatRoom('Sanskari Balak')">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="post-avatar">SB</div>
-                    <div>
-                        <b>Sanskari Balak</b>
-                        <div style="font-size: 12px; color: #8b949e; margin-top: 2px;">नमस्ते! कैसे हो भाई?</div>
-                    </div>
-                </div>
-                <span style="color: #388bfd; font-size: 12px;">ऑनलाइन</span>
-            </div>
-        </div>
+    <!-- Screen 2: Profile -->
+    <div id="profileScreen" class="screen" style="align-items: center; justify-content: center; text-align: center;">
+        <div class="avatar" style="width: 80px; height: 80px; font-size: 30px; margin: 0 auto 15px auto;">M</div>
+        <h2>Mujeeb Mujeeb</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-top: 5px;">डेवलपर और क्रिएटर</p>
     </div>
 
-    <!-- 3. PROFILE VIEW -->
-    <div id="profileView" class="app-view">
-        <div style="max-width: 500px; margin: 20px auto; text-align: center; padding: 20px;">
-            <div class="post-avatar" style="width: 80px; height: 80px; margin: 0 auto 15px auto; font-size: 28px;">M</div>
-            <h2>Mujeeb Mujeeb</h2>
-            <p style="color: #8b949e; font-size: 14px; margin-top: 5px;">AI Creator & Developer</p>
-            <button style="margin-top: 20px; background: #21262d; border: 1px solid #30363d; color: #fff; padding: 8px 20px; border-radius: 6px; cursor: pointer;">प्रोफाइल एडिट करें</button>
-        </div>
-    </div>
-
-    <!-- CHAT ROOM SCREEN (Detailed Chat & Call feature) -->
-    <div id="chatRoomScreen">
+    <!-- Chat Room UI -->
+    <div id="chatRoom">
         <div class="chat-room-header">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px; cursor: pointer;" onclick="closeChatRoom()">←</span>
-                <b id="activeChatName">Sanskari Balak</b>
+                <span style="font-size: 20px; cursor: pointer;" onclick="closeChat()">←</span>
+                <b id="roomName">User</b>
             </div>
             <div style="display: flex; gap: 20px; font-size: 18px; cursor: pointer;">
-                <span onclick="triggerCall('audio')">📞</span>
-                <span onclick="triggerCall('video')">📹</span>
+                <span onclick="startCall('audio')">📞</span>
+                <span onclick="startCall('video')">📹</span>
             </div>
         </div>
-        <div class="chat-messages-box" id="chatMessagesBox">
-            <div class="message-bubble incoming">नमस्ते! कैसे हो भाई?</div>
-            <div class="message-bubble outgoing">सब बढ़िया है भाई, बताओ!</div>
+        <div class="messages-container" id="msgBox">
+            <div class="msg incoming">नमस्ते भाई! सब ठीक है?</div>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="messageInput" placeholder="अपना संदेश यहाँ लिखें...">
-            <button class="send-btn" onclick="sendMessage()">भेजें</button>
-        </div>
-    </div>
-
-    <!-- CALL SCREEN OVERLAY -->
-    <div id="callOverlay">
-        <div class="caller-avatar" id="callAvatarIcon">📞</div>
-        <h2 id="callTitleText" style="margin-bottom: 5px;">कॉल हो रही है...</h2>
-        <p id="callTargetName" style="color: #8b949e; font-size: 16px;">Sanskari Balak</p>
-        <div class="call-actions">
-            <button class="call-btn" style="background: #da3633;" onclick="endCallSession()">❌</button>
-            <button class="call-btn" style="background: #238636;" onclick="alert('कॉल कनेक्ट हो गई!')">✔️</button>
+        <div class="chat-footer">
+            <input type="text" id="msgInput" placeholder="संदेश टाइप करें...">
+            <button onclick="sendMsg()">भेजें</button>
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <div class="bottom-nav">
-        <button class="nav-btn active" onclick="switchTab('homeView', this)">🏠</button>
-        <button class="nav-btn" onclick="switchTab('chatListView', this)">💬</button>
-        <button class="nav-btn" onclick="alert('नया पोस्ट अपलोड करें')">➕</button>
-        <button class="nav-btn" onclick="switchTab('profileView', this)">👤</button>
+    <!-- Call Screen UI -->
+    <div id="callScreen">
+        <div class="call-avatar-big">📞</div>
+        <h2 id="callTitle" style="margin-bottom: 5px;">कॉल हो रही है...</h2>
+        <p id="callTarget" style="color: #94a3b8;">Sanskari Balak</p>
+        <div class="call-buttons">
+            <button class="c-btn" style="background: #ef4444;" onclick="endCall()">❌</button>
+            <button class="c-btn" style="background: #22c55e;" onclick="alert('कॉल कनेक्ट हो गई है!')">✔️</button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="nav-bar">
+        <button class="nav-tab active" onclick="switchScreen('chatsScreen', this)">💬</button>
+        <button class="nav-tab" onclick="switchScreen('profileScreen', this)">👤</button>
     </div>
 
     <script>
-        // टैब स्विच करने का फंक्शन
-        function switchTab(viewId, btnElement) {
-            document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(viewId).classList.add('active');
-            btnElement.classList.add('active');
+        function switchScreen(screenId, btn) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            btn.classList.add('active');
         }
 
-        // चैट लिस्ट व्यू खोलें
-        function openChatListView() {
-            switchTab('chatListView', document.querySelectorAll('.nav-btn')[1]);
+        function openChat(name) {
+            document.getElementById('roomName').innerText = name;
+            document.getElementById('chatRoom').style.display = 'flex';
         }
 
-        // चैट रूम खोलें
-        function openChatRoom(name) {
-            document.getElementById('activeChatName').innerText = name;
-            document.getElementById('chatRoomScreen').style.display = 'flex';
+        function closeChat() {
+            document.getElementById('chatRoom').style.display = 'none';
         }
 
-        // चैट रूम बंद करें
-        function closeChatRoom() {
-            document.getElementById('chatRoomScreen').style.display = 'none';
-        }
-
-        // मैसेज भेजने का लॉजिक
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
+        function sendMsg() {
+            const input = document.getElementById('msgInput');
             if(!input.value.trim()) return;
-
-            const box = document.getElementById('chatMessagesBox');
-            box.innerHTML += `<div class="message-bubble outgoing">${input.value}</div>`;
+            const box = document.getElementById('msgBox');
+            box.innerHTML += `<div class="msg outgoing">${input.value}</div>`;
             input.value = '';
             box.scrollTop = box.scrollHeight;
         }
 
-        // कॉल शुरू करने का फीचर
-        function triggerCall(type) {
-            const overlay = document.getElementById('callOverlay');
-            const title = document.getElementById('callTitleText');
-            
-            title.innerText = type === 'audio' ? 'ऑडियो कॉल जारी है...' : 'वीडियो कॉल जारी है...';
-            overlay.style.display = 'flex';
+        function startCall(type) {
+            document.getElementById('callTitle').innerText = type === 'audio' ? 'ऑडियो कॉल चालू है...' : 'वीडियो कॉल चालू है...';
+            document.getElementById('callScreen').style.display = 'flex';
         }
 
-        // कॉल समाप्त करने का फीचर
-        function endCallSession() {
-            document.getElementById('callOverlay').style.display = 'none';
+        function endCall() {
+            document.getElementById('callScreen').style.display = 'none';
         }
     </script>
 </body>
